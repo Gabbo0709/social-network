@@ -1,0 +1,63 @@
+name: Build
+
+on:
+  push:
+    branches: [ '*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [users-dotnet, posts-laravel, notifications-laravel, relationships-python, search-nodejs]
+    steps:
+      - uses: actions/checkout@v4.2.1
+
+      - name: Setup environment
+        uses: actions/setup-node@v4.0.4
+        with:
+          node-version: '22'
+          cache: 'npm'
+        if: matrix.service == 'search-nodejs'
+
+      - name: Setup environment
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+        if: matrix.service == 'relationships-python'
+
+      - name: Setup environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer:v2
+          cache: 'composer'
+        if: matrix.service == 'posts-laravel' || matrix.service == 'notifications-laravel'
+
+      - name: Build service
+        run: |
+          service_config=${{ matrix.service }}
+          case $service_config in
+            users-dotnet)
+              cd backend/users-dotnet && dotnet build 
+              ;;
+            posts-laravel | notifications-laravel)
+              cd backend/$service_config && composer install --no-interaction --prefer-dist
+              ;;
+            relationships-python)
+              cd backend/relationships-python && pip install -r requirements.txt
+              ;;
+            search-nodejs)
+              cd backend/search-nodejs && npm ci && npm run build
+              ;;
+            *)
+              echo "Servicio no reconocido: $service_config"
+              exit 1
+              ;;
+          esac
+
+      - name: Capture build errors
+        if: failure()
+        run: |
+          echo "La compilación ha fallado. Verifica los logs anteriores para más detalles."
