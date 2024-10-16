@@ -1,4 +1,3 @@
-version: "3.9"  # Specifies the version of docker-compose
 services:
   # Application services
   users:
