@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-Console.WriteLine("Hello, World! Again");
+Console.WriteLine("Hello, World! Again The Revenge");
 
 var app = builder.Build();
 
