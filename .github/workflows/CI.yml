@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [ '*' ]
+    paths:
+      - 'server/users/**'
+      - 'server/posts/**'
+      - 'server/notifications/**'
+      - 'server/relationships/**'
+      - 'server/search/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.1
+
+      - name: Build Docker Images
+        run: docker-compose -f server/docker-compose.yml build
+
+      - name: Capture build errors
+        if: failure()
+        run: |
+          echo "La compilación ha fallado. Verifica los logs anteriores para más detalles."
+
+  test:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.1
+      - name: Start services
+        run: |
+          cd server
+          docker-compose up -d
+      - name: Run tests
+        run: |
+          cd server
+          case {{ github.event_path }} in
+            server/users/*)
+              docker-compose exec users /bin/sh -c "dotnet test"
+              ;;
+            server/posts/* | server/notifications/*)
+              docker-compose exec posts /bin/sh -c "composer install --no-interaction --prefer-dist && phpunit"
+              ;;
+            server/relationships/*)
+              docker-compose exec relationships /bin/sh -c "pip install -r requirements.txt && pytest"
+              ;;
+            server/search/*)
+              docker-compose exec search /bin/sh -c "npm ci && npm test"
+              ;;
+          esac
+      - name: Stop services
+        if: always()
+        run: |
+          cd server
+          docker-compose down
+
+  analyze: # Run linters
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        service: [users, posts, notifications, relationships, search]
+    steps:
+      - uses: actions/checkout@v4.2.1
+      - name: Start services
+        run: |
+          cd server
+          docker-compose up -d
+      - name: Run linters for ${{ matrix.service }}
+        run: |
+          cd server
+          docker-compose exec ${{ matrix.service }} /bin/sh -c "
+            case ${{ matrix.service }} in
+              users)
+                wearerequired/lint-action@v2.3.0 --dotnet_format --dotnet_dir=.
+                ;;
+              posts | notifications)
+                wearerequired/lint-action@v2.3.0 --php_codesniffer_format --php_codesniffer_dir=.
+                ;;
+              relationships)
+                wearerequired/lint-action@v2.3.0 --flake8_format --flake8_dir=.
+                ;;
+              search)
+                npm ci && wearerequired/lint-action@v2.3.0 --eslint_format --eslint_dir=.
+                ;;
+            esac
+          "
+      - name: Stop services
+        if: always()
+        run: |
+          cd server
+          docker-compose down
