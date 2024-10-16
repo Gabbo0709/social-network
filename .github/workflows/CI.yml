@@ -19,7 +19,6 @@ jobs:
         uses: KengoTODA/actions-setup-docker-compose@v1.0.9
         with:
           version: 2.29.7
-            
       - name: Build Docker Images
         run: docker compose -f server/docker-compose.yml build
 

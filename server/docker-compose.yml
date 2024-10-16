@@ -1,22 +1,22 @@
 services:
   # Application services
-  users:
-    build: ./users  # Path to the Dockerfile for users
-    ports:
-      - "8001:80"  # Maps port 80 of the container to 8001 on the host
-  posts:
-    build: ./posts  # Path to the Dockerfile for posts
-    ports:
-      - "8002:9001"  # Maps port 9001 of the container to 8002 on the host
   notifications:
-    build: ./notifications  # Path to the Dockerfile for notifications
+    build: ./notifications/app  # Path to the Dockerfile for notifications
     ports:
-      - "8003:9000"  # Maps port 9000 of the container to 8003 on the host
+      - "8000:9000"  # Maps port 9000 of the container to 8000 on the host
+  posts:
+    build: ./posts/app  # Path to the Dockerfile for posts
+    ports:
+      - "8001:9001"  # Maps port 9001 of the container to 8001 on the host
   relationships:
-    build: ./relationships  # Path to the Dockerfile for relationships
+    build: ./relationships/app  # Path to the Dockerfile for relationships
+    ports:
+    - "8002:5000" # Maps port 5000 of the container to 8002 on the host
+  search:
+    build: ./search/src # Path to the Dockerfile for search
+    ports:
+      - "8003:3000"  # Maps port 3000 of the container to 8003 on the host
+  users:
+    build: ./users/src  # Path to the Dockerfile for users
     ports:
       - "8004:80"  # Maps port 80 of the container to 8004 on the host
-  search:
-    build: ./search  # Path to the Dockerfile for search
-    ports:
-      - "8005:3000"  # Maps port 3000 of the container to 8005 on the host
