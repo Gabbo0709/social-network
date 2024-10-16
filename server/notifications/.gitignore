@@ -1,0 +1,88 @@
+# Laravel & PHP
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+/.env
+/.env.*.php
+/.vagrant
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+*.log
+*.local
+*.cache
+*.phpunit.result.cache
+.phpunit.result.cache
+/.phpunit.result.cache
+/.phpunit.result.cache.*
+
+# IDEs and editors
+/.idea
+/.vscode
+*.sublime-project
+*.sublime-workspace
+
+# Laravel specific
+/public/hot
+/public/storage
+/storage/*.key
+/storage/framework/cache/data
+/storage/framework/sessions
+/storage/framework/testing
+/storage/framework/views
+/storage/logs
+/bootstrap/cache/*.php
+bootstrap/cache/packages.php
+bootstrap/cache/services.php
+bootstrap/cache/config.php
+
+# Composer
+/vendor
+composer.lock
+
+# NPM
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Environment variables
+.env
+.env.*.php
+
+# Laravel Telescope
+/telescope
+
+# Laravel Horizon
+/horizon
+
+# Laravel Mix
+/public/mix-manifest.json
+/public/hot
+/public/css/*.css
+/public/js/*.js
+
+# Cache
+/.phpunit.result.cache
+/.phpunit.result.cache.*
+/.phpunit.result.cache
+.phpunit.result.cache
+
+# Additional entries
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.example
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.idea/

@@ -1,0 +1,87 @@
+# .NET 8 C# 12 project .gitignore
+
+# Ignore build outputs
+bin/
+obj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Ignore user-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+*.aps
+*.pch
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.sbr
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.lib
+*.sln
+*.sdf
+*.opensdf
+*.opendb
+*.unsuccessfulbuild
+*.tmp
+*.tlog
+*.idb
+*.db
+
+# Ignore NuGet packages
+*.nupkg
+*.snupkg
+packages/
+
+# Ignore logs
+*.log
+logs
+*.txt
+
+# Ignore Visual Studio Code settings
+.vscode/
+
+# Ignore Rider settings
+.idea/
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore compiled DLLs and PDBs
+*.dll
+*.pdb
+
+# Ignore publish outputs
+publish/
+
+# Ignore coverage reports
+coverage/
+*.coverage
+*.coveragexml
+*.cov
+
+# Ignore other common files
+*.DS_Store
+Thumbs.db
+**/Thumbs.db
+**/[Tt]humbs.db
+
+# Testing
+TestResult.xml
+TestResults/
