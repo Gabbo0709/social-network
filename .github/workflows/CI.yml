@@ -15,10 +15,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.2.1
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose 1
+      - name: Setup docker-compose
+        uses: KengoTODA/actions-setup-docker-compose@v1.0.9
+        with:
+          version: 2.29.7
+            
       - name: Build Docker Images
         run: docker-compose -f server/docker-compose.yml build
 
@@ -35,29 +36,29 @@ jobs:
       - name: Start services
         run: |
           cd server
-          docker-compose up -d
+          docker compose up -d
       - name: Run tests
         run: |
           cd server
           case {{ github.event_path }} in
             server/users/*)
-              docker-compose exec users /bin/sh -c "dotnet test"
+              docker compose exec users /bin/sh -c "dotnet test"
               ;;
             server/posts/* | server/notifications/*)
-              docker-compose exec posts /bin/sh -c "composer install --no-interaction --prefer-dist && phpunit"
+              docker compose exec posts /bin/sh -c "composer install --no-interaction --prefer-dist && phpunit"
               ;;
             server/relationships/*)
-              docker-compose exec relationships /bin/sh -c "pip install -r requirements.txt && pytest"
+              docker compose exec relationships /bin/sh -c "pip install -r requirements.txt && pytest"
               ;;
             server/search/*)
-              docker-compose exec search /bin/sh -c "npm ci && npm test"
+              docker compose exec search /bin/sh -c "npm ci && npm test"
               ;;
           esac
       - name: Stop services
         if: always()
         run: |
           cd server
-          docker-compose down
+          docker compose down
 
   analyze: # Run linters
     needs: build
@@ -70,11 +71,11 @@ jobs:
       - name: Start services
         run: |
           cd server
-          docker-compose up -d
+          docker compose up -d
       - name: Run linters for ${{ matrix.service }}
         run: |
           cd server
-          docker-compose exec ${{ matrix.service }} /bin/sh -c "
+          docker compose exec ${{ matrix.service }} /bin/sh -c "
             case ${{ matrix.service }} in
               users)
                 wearerequired/lint-action@v2.3.0 --dotnet_format --dotnet_dir=.
@@ -94,4 +95,4 @@ jobs:
         if: always()
         run: |
           cd server
-          docker-compose down
+          docker compose down
