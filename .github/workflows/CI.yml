@@ -55,6 +55,7 @@ jobs:
       - name: Stop services
         if: always()
         run: |
+          cd server
           docker compose down
 
   analyze: # Run linters
@@ -71,6 +72,7 @@ jobs:
           docker compose up -d
       - name: Run linters for ${{ matrix.service }}
         run: |
+          cd server
           docker compose exec ${{ matrix.service }} /bin/sh -c "
             case ${{ matrix.service }} in
               users)
