@@ -4,11 +4,11 @@ on:
   push:
     branches: [ '*' ] # Trigger the workflow on push to any branch
     paths:
-      - 'server/users/**'
-      - 'server/posts/**'
       - 'server/notifications/**'
+      - 'server/posts/**'
       - 'server/relationships/**'
-      - 'server/search/**' # Trigger only if changes are made in these paths
+      - 'server/search/**'
+      - 'server/users/**' # Trigger only if changes are made in these paths
 
 jobs:
   build:
@@ -65,34 +65,66 @@ jobs:
     strategy:
       matrix:
         service: [
-          users, # Lint .NET code for users service
-          posts, # Lint PHP code for posts service
           notifications, # Lint PHP code for notifications service
+          posts, # Lint PHP code for posts service
           relationships, # Lint Python code for relationships service
-          search # Lint JavaScript code for search service
+          search, # Lint JavaScript code for search service
+          users # Lint .NET code for users service
         ]
     steps:
       - uses: actions/checkout@v4.2.1 # Checkout the repository
+
+      - name: Set up PHP
+        if: ${{ matrix.service == 'posts' || matrix.service == 'notifications' }}
+        uses: shivammathur/setup-php@2.31.1
+        with:
+          php-version: '8.3'  # Setup PHP 8.3
+
+      - name: Set up Python 3.13
+        if: ${{ matrix.service == 'relationships' }}
+        uses: actions/setup-python@v5.2.0
+        with:
+          python-version: '3.13' # Setup Python 3.13
+
+      - name: Install Python dependencies
+        if: ${{ matrix.service == 'relationships' }}
+        run: pip install flake8 # Install Python dependencies
+
+      - name: Set up Node.js
+        if: ${{ matrix.service == 'search' }}
+        uses: actions/setup-node@v4.0.4
+        with:
+          node-version: '22' # Setup Node.js 22
+
+      - name: Set up .NET
+        if: ${{ matrix.service == 'users' }}
+        uses: actions/setup-dotnet@v4.0.1
+        with:
+          dotnet-version: '7.0' # Setup .NET 7.0
+
       - name: Run linters for notifications or posts service
-        if : ${{ matrix.service == 'notifications' || matrix.service == 'posts' }}
+        if: ${{ matrix.service == 'notifications' || matrix.service == 'posts' }}
         uses: wearerequired/lint-action@v2.3.0
         with:
           php_codesniffer: true # Run linters for the PHP code
           php_codesniffer_dir: . # Lint the PHP code in the current directory
+
       - name: Run linters for users service
-        if : ${{ matrix.service == 'users' }}
+        if: ${{ matrix.service == 'users' }}
         uses: wearerequired/lint-action@v2.3.0
         with:
           dotnet_format: true # Run linters for the .NET code
           dotnet_format_dir: . # Lint the .NET code in the current directory
+
       - name: Run linters for relationships service
-        if : ${{ matrix.service == 'relationships' }}
+        if: ${{ matrix.service == 'relationships' }}
         uses: wearerequired/lint-action@v2.3.0
         with:
           flake8: true # Run linters for the Python code
           flake8_dir: . # Lint the Python code in the current directory
+
       - name: Run linters for search service
-        if : ${{ matrix.service == 'search' }}
+        if: ${{ matrix.service == 'search' }}
         uses: wearerequired/lint-action@v2.3.0
         with:
           eslint: true # Run linters for the JavaScript code
