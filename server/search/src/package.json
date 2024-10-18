@@ -7,5 +7,10 @@
     "test": "test"
   },
   "author": "Gabriel Arcos Martínez and Eric Gustavo González García",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "eslint": "^9.12.0",
+    "globals": "^15.11.0"
+  }
 }
