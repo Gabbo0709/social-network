@@ -2,95 +2,76 @@ name: CI
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ '*' ] # Trigger the workflow on push to any branch
     paths:
       - 'server/users/**'
       - 'server/posts/**'
       - 'server/notifications/**'
       - 'server/relationships/**'
-      - 'server/search/**'
+      - 'server/search/**' # Trigger only if changes are made in these paths
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4.2.1
+      - uses: actions/checkout@v4.2.1 # Checkout the repository
       - name: Setup docker-compose
         uses: KengoTODA/actions-setup-docker-compose@v1.0.9
         with:
-          version: 2.29.7
+          version: 2.29.7 # Setup a specific version of docker-compose
+      - name: Pull Docker Images
+        run: docker compose -f server/docker-compose.yml pull # Pull the Docker images
       - name: Build Docker Images
-        run: docker compose -f server/docker-compose.yml build
-
+        run: docker compose -f server/docker-compose.yml build --no-cache --parallel # Build the Docker images without cache
       - name: Capture build errors
         if: failure()
         run: |
-          echo "La compilación ha fallado. Verifica los logs anteriores para más detalles."
+          echo "La compilación ha fallado. Verifica los logs anteriores para más detalles." # Capture and log build errors
 
   test:
-    needs: build
+    needs: build # Run tests after the build job
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4.2.1
+      - uses: actions/checkout@v4.2.1 # Checkout the repository
       - name: Start services
         run: |
           cd server
-          docker compose up -d
+          docker compose up -d # Start the services using docker-compose
       - name: Run tests
         run: |
           case ${{ github.event_path }} in
             server/users/*)
-              docker compose exec users /bin/sh -c "dotnet test"
+              docker compose exec users /bin/sh -c "dotnet test" # Run .NET tests for users service
               ;;
             server/posts/* | server/notifications/*)
-              docker compose exec posts /bin/sh -c "composer install --no-interaction --prefer-dist && phpunit"
+              docker compose exec posts /bin/sh -c "composer install --no-interaction --prefer-dist && phpunit" # Run PHP tests for posts and notifications services
               ;;
             server/relationships/*)
-              docker compose exec relationships /bin/sh -c "pip install -r requirements.txt && pytest"
+              docker compose exec relationships /bin/sh -c "pip install -r requirements.txt && pytest" # Run Python tests for relationships service
               ;;
             server/search/*)
-              docker compose exec search /bin/sh -c "npm ci && npm test"
+              docker compose exec search /bin/sh -c "npm ci && npm test" # Run Node.js tests for search service
               ;;
           esac
       - name: Stop services
         if: always()
         run: |
           cd server
-          docker compose down
+          docker compose down # Stop the services
 
   analyze: # Run linters
-    needs: build
+    needs: build # Run linters after the build job
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        service: [users, posts, notifications, relationships, search]
+        service:
+        - { name: 'users', command: '--dotnet_format --dotnet_dir=.' } # Lint .NET code for users service
+        - { name: 'posts', command: '--php_codesniffer_format --php_codesniffer_dir=.' } # Lint PHP code for posts service
+        - { name: 'notifications', command: '--php_codesniffer_format --php_codesniffer_dir=.' } # Lint PHP code for notifications service
+        - { name: 'relationships', command: '--flake8_format --flake8_dir=.' } # Lint Python code for relationships service
+        - { name: 'search', command:  '--eslint_format --eslint_dir=.' } # Lint JavaScript code for search service
     steps:
-      - uses: actions/checkout@v4.2.1
-      - name: Start services
-        run: |
-          cd server
-          docker compose up -d
-      - name: Run linters for ${{ matrix.service }}
-        run: |
-          cd server
-          docker compose exec ${{ matrix.service }} /bin/sh -c "
-            case ${{ matrix.service }} in
-              users)
-                wearerequired/lint-action@v2.3.0 --dotnet_format --dotnet_dir=.
-                ;;
-              posts | notifications)
-                wearerequired/lint-action@v2.3.0 --php_codesniffer_format --php_codesniffer_dir=.
-                ;;
-              relationships)
-                wearerequired/lint-action@v2.3.0 --flake8_format --flake8_dir=.
-                ;;
-              search)
-                npm ci && wearerequired/lint-action@v2.3.0 --eslint_format --eslint_dir=.
-                ;;
-            esac
-          "
-      - name: Stop services
-        if: always()
-        run: |
-          cd server
-          docker compose down
+      - uses: actions/checkout@v4.2.1 # Checkout the repository
+      - name: Run linters for ${{ matrix.service.name }}
+        uses: wearerequired/lint-action@v2.3.0
+        with: ${{ matrix.service.command }} # Run the appropriate linter for each service
