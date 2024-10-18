@@ -64,14 +64,36 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        service:
-        - { name: 'users', command: '--dotnet_format --dotnet_dir=.' } # Lint .NET code for users service
-        - { name: 'posts', command: '--php_codesniffer_format --php_codesniffer_dir=.' } # Lint PHP code for posts service
-        - { name: 'notifications', command: '--php_codesniffer_format --php_codesniffer_dir=.' } # Lint PHP code for notifications service
-        - { name: 'relationships', command: '--flake8_format --flake8_dir=.' } # Lint Python code for relationships service
-        - { name: 'search', command:  '--eslint_format --eslint_dir=.' } # Lint JavaScript code for search service
+        service: [
+          users, # Lint .NET code for users service
+          posts, # Lint PHP code for posts service
+          notifications, # Lint PHP code for notifications service
+          relationships, # Lint Python code for relationships service
+          search # Lint JavaScript code for search service
+        ]
     steps:
       - uses: actions/checkout@v4.2.1 # Checkout the repository
-      - name: Run linters for ${{ matrix.service.name }}
+      - name: Run linters for notifications or posts service
+        if : ${{ matrix.service == 'notifications' || matrix.service == 'posts' }}
         uses: wearerequired/lint-action@v2.3.0
-        with: ${{ matrix.service.command }} # Run the appropriate linter for each service
+        with:
+          php_codesniffer: true # Run linters for the PHP code
+          php_codesniffer_dir: . # Lint the PHP code in the current directory
+      - name: Run linters for users service
+        if : ${{ matrix.service == 'users' }}
+        uses: wearerequired/lint-action@v2.3.0
+        with:
+          dotnet_format: true # Run linters for the .NET code
+          dotnet_format_dir: . # Lint the .NET code in the current directory
+      - name: Run linters for relationships service
+        if : ${{ matrix.service == 'relationships' }}
+        uses: wearerequired/lint-action@v2.3.0
+        with:
+          flake8: true # Run linters for the Python code
+          flake8_dir: . # Lint the Python code in the current directory
+      - name: Run linters for search service
+        if : ${{ matrix.service == 'search' }}
+        uses: wearerequired/lint-action@v2.3.0
+        with:
+          eslint: true # Run linters for the JavaScript code
+          eslint_dir: . # Lint the JavaScript code in the current directory
