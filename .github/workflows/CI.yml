@@ -73,71 +73,11 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v4.2.1 # Checkout the repository
-
-      - name: Set up PHP
-        if: ${{ matrix.service == 'posts' || matrix.service == 'notifications' }}
-        uses: shivammathur/setup-php@2.31.1
         with:
-          php-version: '8.3'  # Setup PHP 8.3
-          tools: phpcs # Setup PHP CodeSniffer
+          fetch-depth: 0
 
-      - name: Set up Python 3.13
-        if: ${{ matrix.service == 'relationships' }}
-        uses: actions/setup-python@v5.2.0
-        with:
-          python-version: '3.13' # Setup Python 3.13
+      - name: Run linter (Super-Linter)
+        uses: super-linter/super-linter@v7.1.0 # Use the Super-Linter action
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Pass the GitHub token to the action
 
-      - name: Install Python dependencies
-        if: ${{ matrix.service == 'relationships' }}
-        run: pip install flake8 # Install Python dependencies
-
-      - name: Set up Node.js
-        if: ${{ matrix.service == 'search' }}
-        uses: actions/setup-node@v4.0.4
-        with:
-          node-version: '22' # Setup Node.js 22
-
-      - name: Install Node.js dependencies
-        if: ${{ matrix.service == 'search' }}
-        run: |
-          cd server/search/src
-          ls -l
-          npm ci --include=dev # Install Node.js dependencies
-
-      - name: Check if ESLint is installed
-        if: ${{ matrix.service == 'search' }}
-        run: npx eslint --version || npm install eslint --save-dev # Check if ESLint is installed and install it if not
-
-      - name: Set up .NET
-        if: ${{ matrix.service == 'users' }}
-        uses: actions/setup-dotnet@v4.0.1
-        with:
-          dotnet-version: '7.0' # Setup .NET 7.0
-
-      - name: Run linters for notifications or posts service
-        if: ${{ matrix.service == 'notifications' || matrix.service == 'posts' }}
-        uses: wearerequired/lint-action@v2.3.0
-        with:
-          php_codesniffer: true # Run linters for the PHP code
-          php_codesniffer_dir: . # Lint the PHP code in the current directory
-
-      - name: Run linters for users service
-        if: ${{ matrix.service == 'users' }}
-        uses: wearerequired/lint-action@v2.3.0
-        with:
-          dotnet_format: true # Run linters for the .NET code
-          dotnet_format_dir: . # Lint the .NET code in the current directory
-
-      - name: Run linters for relationships service
-        if: ${{ matrix.service == 'relationships' }}
-        uses: wearerequired/lint-action@v2.3.0
-        with:
-          flake8: true # Run linters for the Python code
-          flake8_dir: . # Lint the Python code in the current directory
-
-      - name: Run linters for search service
-        if: ${{ matrix.service == 'search' }}
-        uses: wearerequired/lint-action@v2.3.0
-        with:
-          eslint: true # Run linters for the JavaScript code
-          eslint_dir: /server/search/src # Lint the JavaScript code in the current directory
