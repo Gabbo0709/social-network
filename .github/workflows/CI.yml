@@ -97,6 +97,10 @@ jobs:
         with:
           node-version: '22' # Setup Node.js 22
 
+      - name: Install Node.js dependencies
+        if: ${{ matrix.service == 'search' }}
+        run: npm ci --also=dev # Install Node.js dependencies including dev dependencies
+
       - name: Set up .NET
         if: ${{ matrix.service == 'users' }}
         uses: actions/setup-dotnet@v4.0.1
