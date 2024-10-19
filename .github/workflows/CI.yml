@@ -140,4 +140,4 @@ jobs:
         uses: wearerequired/lint-action@v2.3.0
         with:
           eslint: true # Run linters for the JavaScript code
-          eslint_dir: . # Lint the JavaScript code in the current directory
+          eslint_dir: /server/search/src # Lint the JavaScript code in the current directory
