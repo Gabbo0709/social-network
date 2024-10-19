@@ -99,7 +99,9 @@ jobs:
 
       - name: Install Node.js dependencies
         if: ${{ matrix.service == 'search' }}
-        run: npm ci --include=dev # Install Node.js dependencies
+        run: |
+          ls -l
+          npm ci --include=dev # Install Node.js dependencies
 
       - name: Check if ESLint is installed
         if: ${{ matrix.service == 'search' }}
