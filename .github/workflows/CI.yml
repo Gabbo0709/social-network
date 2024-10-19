@@ -99,7 +99,9 @@ jobs:
 
       - name: Install Node.js dependencies
         if: ${{ matrix.service == 'search' }}
-        run: npm ci --include=dev # Install Node.js dependencies including dev dependencies
+        run: |
+          cd server/search/src
+          npm ci --include=dev
 
       - name: Set up .NET
         if: ${{ matrix.service == 'users' }}
