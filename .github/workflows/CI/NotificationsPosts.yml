@@ -1,0 +1,70 @@
+on:
+  push:
+    branches: [ '*' ] # Trigger the workflow on push to any branch
+    paths:
+      - 'server/notifications/**'
+      - 'server/posts/**' # Trigger only if changes are made in these paths
+    
+jobs:
+  build:
+    runs-on: ubuntu-24.04 # Use Ubuntu 24.04 as the runner
+    steps:
+      - uses: actions/checkout@v4.2.1 # Check out the repository
+      - name: Run docker-compose
+        uses: hoverkraft-tech/compose-action@v2.0.2 # Use hoverkraft-tech/compose-action to run docker-compose
+        with:
+          compose-file: "server/docker-compose.yml" # Specify the docker-compose file
+      - name: Capture build errors
+        if: failure() # Only run if the previous steps fail
+        run: |
+          echo "La compilación ha falló. Verifica los logs anteriores para más detalles." # Print a message if the build fails
+
+  test:
+    needs: build # Run tests after the build job
+    runs-on: ubuntu-24.04 # Use Ubuntu 24.04 as the runner
+    steps:
+      - uses: actions/checkout@v4.2.1 # Check out the repository
+      - name: Start services
+        run: |
+          cd server
+          docker compose up -d # Start the services using docker-compose
+      # Run tests for the notifications or posts service using PHPUnit
+      - name: Run tests for ${{ github.event_path }}
+        run: |
+          case ${{ github.event_path }} in
+            server/notifications/*)
+              docker compose exec notifications /bin/sh -c "composer install --no-interaction --prefer-dist && phpunit" # Run tests for notifications
+              ;;
+            server/posts/*)
+              docker compose exec posts /bin/sh -c "composer install --no-interaction --prefer-dist && phpunit" # Run tests for posts
+              ;;
+          esac
+      - name: Stop services 
+        if: always() # Always run this step
+        run: |
+          cd server
+          docker compose down # Stop the services
+  
+  analyze: # Run linters using Super Linter
+    runs-on: ubuntu-24.04 # Use Ubuntu 24.04 as the runner
+    steps:
+      - uses: actions/checkout@v4.2.1 # Check out the repository
+        with:
+          fetch-depth: 0 # Fetch all history for all branches and tags
+      - name: Run Super Linter for Notifications
+        if: ${{ github.event_path == 'server/notifications/*' }} # Only run if changes are in the notifications directory
+        uses: github/super-linter@v3.17.0 # Use Super Linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub token for authentication
+          VALIDATE_ALL_CODEBASE: false # Do not validate the entire codebase
+          DEFAULT_BRANCH: '*' # Default branch
+          FILTER_REGEX_INCLUDE: 'server/notifications/*' # Only include notifications directory
+
+      - name: Run Super Linter for Posts
+        if: ${{ github.event_path == 'server/posts/*' }} # Only run if changes are in the posts directory
+        uses: github/super-linter@v3.17.0 # Use Super Linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub token for authentication
+          VALIDATE_ALL_CODEBASE: false # Do not validate the entire codebase
+          DEFAULT_BRANCH: '*' # Default branch
+          FILTER_REGEX_INCLUDE: 'server/posts/*' # Only include posts directory

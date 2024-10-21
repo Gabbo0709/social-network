@@ -1,0 +1,50 @@
+on:
+  push:
+    branches: [ '*' ] # Trigger the workflow on push to any branch
+    paths:
+      - 'server/users/**' # Only trigger when changes are made in the relationships directory
+    
+jobs:
+  build:
+    runs-on: ubuntu-24.04 # Use Ubuntu 24.04 as the runner
+    steps:
+      - uses: actions/checkout@v4.2.1 # Check out the repository
+      - name: Run docker-compose
+        uses: hoverkraft-tech/compose-action@v2.0.2 # Use hoverkraft-tech/compose-action to run docker-compose
+        with:
+          compose-file: "server/docker-compose.yml" # Specify the docker-compose file
+      - name: Capture build errors
+        if: failure() # Only run if the previous steps fail
+        run: |
+          echo "Build failed. Check the logs above for more details." # Print a message if the build fails
+
+  test:
+    needs: build # Run tests after the build job
+    runs-on: ubuntu-24.04 # Use Ubuntu 24.04 as the runner
+    steps:
+      - uses: actions/checkout@v4.2.1 # Check out the repository
+      - name: Start services
+        run: |
+          cd server
+          docker compose up -d # Start the services using docker-compose
+      # Run tests for the users service using .NET
+      - name: Run tests for users
+        run: docker compose exec users /bin/sh -c "dotnet test"
+        if: always() # Always run this step
+        run: |
+          cd server
+          docker compose down # Stop the services
+  
+  analyze: # Run linters using Super Linter
+    runs-on: ubuntu-24.04 # Use Ubuntu 24.04 as the runner
+    steps:
+      - uses: actions/checkout@v4.2.1 # Check out the repository
+        with:
+          fetch-depth: 0 # Fetch all history for all branches and tags
+      - name: Run Super Linter for Relationships
+        uses: github/super-linter@v3.17.0 # Use Super Linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub token for authentication
+          VALIDATE_ALL_CODEBASE: false # Do not validate the entire codebase
+          DEFAULT_BRANCH: '*' # Default branch
+          FILTER_REGEX_INCLUDE: 'server/notifications/*' # Only include notifications directory
